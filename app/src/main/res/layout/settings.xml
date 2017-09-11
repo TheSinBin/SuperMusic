@@ -1,0 +1,114 @@
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
+	
+	<RelativeLayout
+		android:layout_below="@+id/hideShowList"
+		android:padding="16dp"
+		android:overScrollMode="never"
+		android:id="@+id/settingsView"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent">
+		
+		<LinearLayout
+			android:layout_below="@+id/shufrep"
+			android:paddingBottom="16dp"
+			android:id="@+id/volume"
+			android:gravity="center"
+			android:orientation="horizontal"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content">
+
+			<ImageView
+				android:id="@+id/spDown"
+				android:scaleType="fitCenter"
+				android:src="@drawable/speaker"
+				android:layout_weight=".90"
+				android:gravity="center_horizontal"
+				android:layout_width="match_parent"
+				android:layout_height="@dimen/imageview_size"/>
+			
+			<ImageView
+				android:scaleType="fitCenter"
+				android:id="@+id/volumeDown"
+				android:src="@drawable/vdown"
+				android:layout_weight=".90"
+				android:gravity="center_horizontal"
+				android:layout_width="match_parent"
+				android:layout_height="@dimen/imageview_size"/>
+
+			<SeekBar
+				android:progressDrawable="@drawable/seekbar_track"
+				android:thumb="@drawable/switch_thumb"
+				android:id="@+id/volcontrol"
+				android:layout_weight=".15"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"/>
+
+			<ImageView
+				android:id="@+id/spUp"
+				android:scaleType="fitCenter"
+				android:src="@drawable/speaker"
+				android:layout_weight=".90"
+				android:gravity="center_horizontal"
+				android:layout_width="match_parent"
+				android:layout_height="@dimen/imageview_size"/>
+			
+			<ImageView
+				android:scaleType="fitCenter"
+				android:id="@+id/volumeUp"
+				android:src="@drawable/vup"
+				android:layout_weight=".90"
+				android:gravity="center_horizontal"
+				android:layout_width="match_parent"
+				android:layout_height="@dimen/imageview_size"/>
+
+		</LinearLayout>
+		
+		<Switch
+			android:textOn=" "
+			android:textOff=" "
+			android:thumbTextPadding="11dp"
+			android:textColor="@color/pixel_white"
+			android:fontFamily="sans-serif-light"
+			android:textSize="16dp"
+			android:paddingBottom="16dp"
+			android:paddingTop="16dp"
+			android:thumb="@drawable/switch_thumb"
+			android:track="@drawable/switch_track"
+			android:switchMinWidth="56dp"
+			android:text="@string/gecemodu1"
+			android:layout_below="@+id/volume"
+			android:id="@+id/nightMode"
+			android:gravity="center_vertical"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"/>
+		
+		<Switch
+			android:textOn=" "
+			android:textOff=" "
+			android:thumbTextPadding="11dp"
+			android:textColor="@color/pixel_white"
+			android:fontFamily="sans-serif-light"
+			android:textSize="16dp"
+			android:paddingBottom="16dp"
+			android:paddingTop="16dp"
+			android:thumb="@drawable/switch_thumb"
+			android:track="@drawable/switch_track"
+			android:switchMinWidth="56dp"
+			android:text="@string/audiofocus1"
+			android:layout_below="@+id/nightMode"
+			android:id="@+id/audFocus"
+			android:gravity="center_vertical"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"/>
+		
+		<ListView
+			android:divider="@android:color/transparent"
+			android:layout_below="@+id/audFocus"
+			android:id="@+id/settingsList"
+			android:overScrollMode="never"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"/>
+		
+	</RelativeLayout>
+	
+</merge>

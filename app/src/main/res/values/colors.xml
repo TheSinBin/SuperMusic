@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<color name="pixel_blue">#5E97F6</color>
+	<color name="pixel_blue_dark">#4D7CD1</color>
+	<color name="pixel_yellow">#F7BA5F</color>
+	<color name="pixel_yellow_dark">#D4A54E</color>
+	<color name="pixel_green">#4BE45F</color>
+	<color name="pixel_green_dark">#4ED05C</color>
+	<color name="pixel_red">#F7695F</color>
+	<color name="pixel_red_dark">#D35D4F</color>
+	<color name="pixel_purple">#B65CF7</color>
+	<color name="pixel_purple_dark">#984BD1</color>
+	<color name="pixel_pink">#F75CAC</color>
+	<color name="pixel_pink_dark">#CF4F92</color>
+	<color name="pixel_turquoise">#55E2B3</color>
+	<color name="pixel_turquoise_dark">#4CDAAB</color>
+	<color name="pixel_white">#FEFEFE</color>
+	<color name="pixel_white_transparent">#66FEFEFE</color>
+	<color name="pixel_dark">#303030</color>
+	<color name="pixel_dark_transparent">#66303030</color>
+	<color name="pixel_dark_transparent2">#55303030</color>
+	<color name="pixel_gray">#565656</color>
+	<color name="pixel_darker_gray">#484848</color>
+	<!-- #ff9d9e -->
+</resources>
