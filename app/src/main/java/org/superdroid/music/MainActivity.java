@@ -9,6 +9,7 @@ import android.media.*;
 import android.net.*;
 import android.os.*;
 import android.provider.*;
+import android.util.*;
 import android.view.*;
 import android.webkit.*;
 import android.widget.*;
@@ -29,7 +30,7 @@ public class MainActivity extends Activity {
 	String[][] mlist;
 	ListView lv;
 	Toast t;
-	boolean seekChange, stop, longclk, volChange = false;
+	boolean seekChange, stop, longclk, volChange, next = false;
 	TextView topBar, nosong, tv, currentTime,
 				songNumber, currentSong, artAlbum;
 	RelativeLayout albumArtLayout, settingsView,
@@ -87,7 +88,7 @@ public class MainActivity extends Activity {
 				(RelativeLayout.LayoutParams)
 					albumArtBg.getLayoutParams();
 			rlp1.height = rlp1.height + getStatusBarHeight() + padding;
-			rlp2.height = rlp2.height + getStatusBarHeight() + padding;
+			rlp2.height = rlp2.height + getStatusBarHeight() * 2/*+ padding*/;
 			albumArtLayoutBig.setLayoutParams(rlp1);
 			albumArtBg.setLayoutParams(rlp2);
 			albumArtLayoutBig.setPadding(padding,getStatusBarHeight()+padding,padding,padding);
@@ -205,6 +206,7 @@ public class MainActivity extends Activity {
 
 		nextButton.setOnClickListener(new View.OnClickListener(){
 				public void onClick(View v){
+					//mp.seekTo(pc.getMax());
 					next();
 				}
 			});
@@ -231,13 +233,36 @@ public class MainActivity extends Activity {
 			}
 		});
 		
+		pc.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+				@Override
+				public void onProgressChanged(SeekBar p1, int p2, boolean p3){
+					if(mp != null && !mp.isPlaying()){
+						//mp.seekTo(p2);
+						currentTime.setText(getDuration(mp.getCurrentPosition()/1000)+"\n——\n"+getDuration(mp.getDuration()/1000));
+					}
+				}
+
+				@Override
+				public void onStartTrackingTouch(SeekBar p1){
+					seekChange = true;
+				}
+
+				@Override
+				public void onStopTrackingTouch(SeekBar p1){
+					if(mp != null) mp.seekTo(p1.getProgress());
+					seekChange = false;
+				}
+			});
+		
 		try{
 			mediaButton();
 			fillList(zdb.getBoolean("night",false));
 			fillSettings();
 			getLastSong();
 			completed();
-		} catch(Exception ignored){}
+		} catch(Exception ignored){
+			showToast(ignored.toString());
+		}
 		
     }
 	
@@ -304,23 +329,6 @@ public class MainActivity extends Activity {
 			nosong.setVisibility(View.VISIBLE);
 		} else {
 			for(String s : mlist[0]) itemm.add(s);
-			pc.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
-					@Override
-					public void onProgressChanged(SeekBar p1, int p2, boolean p3){}
-
-					@Override
-					public void onStartTrackingTouch(SeekBar p1){
-						seekChange = true;
-					}
-
-					@Override
-					public void onStopTrackingTouch(SeekBar p1){
-						if(mp != null) mp.seekTo(p1.getProgress());
-						seekChange = false;
-					}
-				});
-			
-			
 			lv.setAdapter(itemm);
 			registerForContextMenu(lv);
 			lv.setOnItemClickListener(new OnItemClickListener(){
@@ -380,9 +388,11 @@ public class MainActivity extends Activity {
 				if(!play){
 					mp.pause();
 					setNoti(pold,true);
+					stop = true;
 				} else {
 					mp.start();
 					setNoti(pold,false);
+					setTxt();
 				} 
 			}
 		} catch(Exception e){
@@ -398,8 +408,10 @@ public class MainActivity extends Activity {
 					mp.seekTo(0);
 					mp.start();
 				} else {
-					if(mp.isPlaying())
-						mpStop();
+					if(mp.isPlaying()){
+						mp.stop();
+						stop = true;
+					} 
 					if((pold-1) != -1){
 						mp = MediaPlayer.create(MainActivity.this,Uri.parse(mlist[1][pold-1]));
 						pold--;
@@ -408,16 +420,17 @@ public class MainActivity extends Activity {
 						pold = 0;
 					} 
 					putLastSong();
+					mp.start();
 					completed();
 					currentSong.setText(mlist[0][pold]);
 					artAlbum.setText(mlist[2][pold]+" - "+mlist[3][pold]);
 					songNumber.setText((pold+1)+"\n——\n"+mlist[0].length);
-					mp.start();
 				}
 				albumArt.setImageBitmap(getAlbumArt());
 				albumArtBg.setImageBitmap(fastblur(getAlbumArt()));
 				albumArtBig.setImageBitmap(getAlbumArt());
 				setNoti(pold,false);
+				setTxt();
 			}
 		} catch(Exception e){
 			Toast.makeText(getBaseContext(),getResources().getString(R.string.muziksorunu),1000).show();
@@ -427,7 +440,10 @@ public class MainActivity extends Activity {
 	void next(){
 		try{
 			if(mp != null){
-				if(mp.isPlaying()) mp.stop();
+				if(mp.isPlaying()){
+					mp.stop();
+					stop = true;
+				} 
 				if(rep != 3){
 					if((pold+1) != mlist[1].length){
 						mp = MediaPlayer.create(MainActivity.this,Uri.parse(mlist[1][pold+1]));
@@ -450,6 +466,7 @@ public class MainActivity extends Activity {
 				songNumber.setText((pold+1)+"\n——\n"+mlist[0].length);
 				mp.start();
 				setNoti(pold,false);
+				setTxt();
 			}
 		} catch(Exception e){
 			Toast.makeText(getBaseContext(),getResources().getString(R.string.muziksorunu),1000).show();
@@ -510,32 +527,34 @@ public class MainActivity extends Activity {
 		mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener(){
 				@Override
 				public void onCompletion(MediaPlayer p1){
-					switch(zdb.getInteger("repeat",0)){
-						case 1:
-							if(pold == mlist[0].length) pold = 0;
-							next();
-							completed();
-							break;
-						case 2:
-							mpStop();
-							play();
-							break;
-						case 3:
-							pold = new Random().nextInt(mlist[0].length);
-							next();
-							completed();
-							break;
-						case 0:
-						default:
-							if((pold+1) != mlist[1].length){
+					if(!stop){
+						switch(zdb.getInteger("repeat",0)){
+							case 1:
+								if(pold == mlist[0].length) pold = 0;
 								next();
 								completed();
-							}
-						break;
+								break;
+							case 2:
+								mpStop();
+								play();
+								break;
+							case 3:
+								pold = new Random().nextInt(mlist[0].length);
+								next();
+								completed();
+								break;
+							case 0:
+							default:
+								if((pold+1) != mlist[1].length){
+									next();
+									completed();
+								}
+								break;
+						}
+						//setNoti(pold,false);
+						//currentSong.setText(mlist[0][pold]);
 					}
 					
-					setNoti(pold,false);
-					currentSong.setText(mlist[0][pold]);
 				}
 			});
 	}
@@ -545,6 +564,7 @@ public class MainActivity extends Activity {
 		mp.pause();
 		mp.seekTo(0);
 		pc.setProgress(0);
+		stop = true;
 		currentTime.setText(getDuration(mp.getCurrentPosition()/1000)+"\n——\n"+getDuration(mp.getDuration()/1000));
 	}
 	
@@ -555,25 +575,27 @@ public class MainActivity extends Activity {
 		if(!stop){
 			new Handler().postDelayed(new Runnable(){
 					public void run(){
+					//synchronized(this){
 						if(aud != null && mp != null){
 							if(aud.isWiredHeadsetOn() != wired){
 								if(!aud.isWiredHeadsetOn()){
 									mp.pause();
 									setNoti(pold,true);
-								} if(!volChange){
+								} if(!(volChange && lv.isShown())){
 									vc.setMax(aud.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
 									vc.setProgress(aud.getStreamVolume(AudioManager.STREAM_MUSIC));
 								} else volChange = false;
 							} wired = aud.isWiredHeadsetOn();
-							if(mp.isPlaying()){
+							//if(mp.isPlaying()){
 								if(!seekChange){
 									pc.setMax(mp.getDuration());
 									pc.setProgress(mp.getCurrentPosition());
 								} currentTime.setText(getDuration(mp.getCurrentPosition()/1000)+"\n——\n"+getDuration(mp.getDuration()/1000));
-							}
+							//}
 						} setTxt();
+					//}
 					}
-				},250);
+				},50);
 		} else stop = false;
 	}
 	
@@ -1119,6 +1141,28 @@ public class MainActivity extends Activity {
 		}
 	}
 	
+	int getAppColorLight(){
+		switch(zdb.getInteger("theme",0)){
+			case 1:
+				return getResources().getColor(R.color.pixel_yellow);
+			case 2:
+				return getResources().getColor(R.color.pixel_green);
+			case 3:
+				return getResources().getColor(R.color.pixel_red);
+			case 4:
+				return getResources().getColor(R.color.pixel_purple);
+			case 5:
+				return getResources().getColor(R.color.pixel_pink);
+			case 6:
+				return getResources().getColor(R.color.pixel_turquoise);
+			case 7:
+				return getResources().getColor(R.color.pixel_gray);
+			case 0:
+			default:
+				return getResources().getColor(R.color.pixel_blue);
+		}
+	}
+	
 	void setAppTheme(int theme){
 		switch(theme){
 			case 0:
@@ -1177,7 +1221,7 @@ public class MainActivity extends Activity {
 	void getLastSong(){
 		pold = zdb.getInteger("lastSong",pold);
 		mp = MediaPlayer.create(this,Uri.parse(mlist[1][pold]));
-		setTxt();
+		//setTxt();
 		albumArt.setImageBitmap(getAlbumArt());
 		albumArtBg.setImageBitmap(fastblur(getAlbumArt()));
 		albumArtBig.setImageBitmap(getAlbumArt());
@@ -1515,11 +1559,29 @@ public class MainActivity extends Activity {
 				}
 			} bitmap.setPixels(pix, 0, w, 0, 0, w, h);
 			return bitmap;
-		} catch(Exception e){ return sentBitmap; }
+		} catch(Exception e){
+			//return sentBitmap;
+			//return crBitmap();
+			return textAsBitmap("◼",1.5f,getResources().getColor(R.color.pixel_white_transparent));
+		}
 	}
 	
 	String getStr(int startValue, int skipValue){
 		return getResources().getString(startValue+skipValue);
+	}
+	
+	public Bitmap textAsBitmap(String text, float textSize, int textColor) {
+		Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+		paint.setTextSize(textSize);
+		paint.setColor(textColor);
+		paint.setTextAlign(Paint.Align.LEFT);
+		float baseline = -paint.ascent(); // ascent() is negative
+		int width = (int) (paint.measureText(text) + 0.5f); // round
+		int height = (int) (baseline + paint.descent() + 0.5f);
+		Bitmap image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+		Canvas canvas = new Canvas(image);
+		canvas.drawText(text, 0, baseline, paint);
+		return image;
 	}
 	
 }
